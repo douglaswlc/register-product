@@ -1,0 +1,10 @@
+{
+  "books": [
+    {
+      "id": 1,
+      "title": "A coragem de ser imperfeito",
+      "price": 20,
+      "imageUrl": "https://m.media-amazon.com/images/I/51U7zhht0wL.jpg"
+    }
+  ]
+}
