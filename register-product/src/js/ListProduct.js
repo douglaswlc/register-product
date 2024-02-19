@@ -1,58 +1,13 @@
-import { DeleteOutlined } from "@ant-design/icons";
-import { Button, Popconfirm, Table } from "antd";
+import {
+  DeleteOutlined,
+  EditOutlined,
+  PlusCircleFilled,
+} from "@ant-design/icons";
+import { Button, Form, Image, Input, Modal, Popconfirm, Table } from "antd";
 import React, { useState } from "react";
 
-const ListProducts = () => {
-  const [data, setData] = useState([]);
-
-  const columns = [
-    {
-      width: 200,
-      title: "Título",
-      dataIndex: "title",
-
-      sorter: (a, b) => a.name.length - b.name.length,
-      sortDirections: ["descend"],
-    },
-    {
-      title: "Preço",
-      dataIndex: "price",
-      defaultSortOrder: "descend",
-      sorter: (a, b) => a.age - b.age,
-    },
-    {
-      title: "Descrição",
-      dataIndex: "description",
-      style: {},
-    },
-    {
-      title: "Imagem",
-      dataIndex: "imageUrl",
-    },
-    {
-      title: "Ação",
-      key: "action",
-      render: (record) => (
-        <Popconfirm
-          title="Tem certeza que deseja deletar este livro?"
-          onConfirm={() => handleDelete(record.id)}
-        >
-          <Button type="danger" icon={<DeleteOutlined />} />
-        </Popconfirm>
-      ),
-    },
-  ];
-
-  const handleDelete = async (id) => {
-    try {
-      const newData = data.filter((item) => item.id !== id);
-      setData(newData);
-    } catch (error) {
-      console.error("Erro ao deletar", error);
-    }
-  };
-
-  const dataBooks = [
+function ListProducts() {
+  const [dataBooks, setDataBooks] = useState([
     {
       key: "1",
       title: "A coragem de ser imperfeito",
@@ -88,21 +43,148 @@ const ListProducts = () => {
       imageUrl:
         "https://leitorcompulsivo.com.br/wp-content/uploads/2022/12/a-vida-futura.jpg",
     },
+  ]);
+
+  const [editingBook, setEditingBook] = useState(null);
+  const [visible, setVisible] = useState(false);
+  const [modalType, setModalType] = useState("add");
+  const [newBookData, setNewBookData] = useState();
+
+  const columns = [
+    {
+      width: 200,
+      title: "Título",
+      dataIndex: "title",
+
+      sorter: (a, b) => a.title.length - b.title.length,
+      sortDirections: ["descend"],
+    },
+    {
+      title: "Preço",
+      dataIndex: "price",
+      defaultSortOrder: "descend",
+      sorter: (a, b) => a.price - b.price,
+    },
+    {
+      title: "Descrição",
+      width: 700,
+      dataIndex: "description",
+    },
+    {
+      title: "Imagem",
+      dataIndex: "imageUrl",
+      render: (imageUrl) => (
+        <Image
+          src={imageUrl}
+          style={{ width: 100, height: 100, borderRadius: 50 }}
+        />
+      ),
+    },
+    {
+      title: "Ações",
+      key: "action",
+      render: (book) => (
+        <span>
+          <Popconfirm
+            title="Tem certeza que deseja deletar este livro?"
+            onConfirm={() => handleDelete(book.key)}
+          >
+            <Button type="danger" icon={<DeleteOutlined />} />
+          </Popconfirm>
+          <Button
+            type="danger"
+            icon={<EditOutlined />}
+            onClick={() => handleEdit(book)}
+          />
+        </span>
+      ),
+    },
   ];
 
-  const onChange = (pagination, filters, sorter, extra) => {
-    console.log("params", pagination, filters, sorter, extra);
+  const handleEdit = (book) => {
+    setEditingBook(book);
+    setVisible(true);
+  };
+
+  const handleSave = () => {
+    if (modalType === "add") {
+      const newBookKey = (dataBooks.length + 1).toString();
+      const newBook = { ...newBookData, key: newBookKey };
+      setDataBooks([...dataBooks, newBook]);
+    } else {
+      const updatedBooks = dataBooks.map((book) =>
+        book.key === editingBook.key ? { ...book, ...editingBook } : book
+      );
+      setDataBooks(updatedBooks);
+    }
+    setVisible(false);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewBookData({ ...newBookData, [name]: value });
+  };
+
+  const handleDelete = (key) => {
+    const newDataBooks = dataBooks.filter((book) => book.key !== key);
+    setDataBooks(newDataBooks);
   };
 
   return (
-    <Table
-      style={{ margin: 40 }}
-      columns={columns}
-      dataSource={dataBooks}
-      pagination={false}
-      onChange={onChange}
-    />
+    <div>
+      <div
+        style={{
+          alignItems: "center",
+          justifyContent: "center",
+          display: "flex",
+        }}
+      >
+        <Button
+          type="danger"
+          icon={<PlusCircleFilled />}
+          onClick={() => {
+            setModalType("add");
+            setVisible(true);
+          }}
+          style={{ fontSize: 20 }}
+        >
+          Adicionar Livro
+        </Button>
+      </div>
+      <Table
+        style={{
+          margin: 40,
+          alignItems: "center",
+          justifyContent: "center",
+          display: "flex",
+        }}
+        columns={columns}
+        dataSource={dataBooks}
+        pagination={false}
+      />
+      <Modal
+        title={modalType === "add" ? "Adicionar Livro" : "Editar Livro"}
+        visible={visible}
+        onOk={handleSave}
+        onCancel={() => setVisible(false)}
+      >
+        <Form>
+          <Form.Item label="Título" name="title">
+            <Input name="title" onChange={handleInputChange} placeholder="Harry Potter" />
+          </Form.Item>
+          <Form.Item label="Preço" name="price">
+            <Input name="price" onChange={handleInputChange} placeholder="20" />
+          </Form.Item>
+          <Form.Item label="Descrição" name="description">
+            <Input name="description" onChange={handleInputChange} placeholder="Resenha" />
+          </Form.Item>
+          <Form.Item label="Imagem" name="imageUrl">
+            <Input name="imageUrl" onChange={handleInputChange} placeholder="Adicione a URL da imagem" />
+          </Form.Item>
+        </Form>
+      </Modal>
+    </div>
   );
-};
+}
 
 export default ListProducts;
